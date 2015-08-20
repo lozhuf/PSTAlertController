@@ -82,7 +82,8 @@ typedef NS_ENUM(NSInteger, PSTAlertActionStyle) {
 - (void)showWithSender:(id)sender controller:(UIViewController *)controller animated:(BOOL)animated completion:(void (^)(void))completion;
 - (void)showWithSender:(id)sender arrowDirection:(UIPopoverArrowDirection)arrowDirection controller:(UIViewController *)controller animated:(BOOL)animated completion:(void (^)(void))completion;
 - (void)dismissAnimated:(BOOL)animated completion:(void (^)(void))completion;
-
+- (void)dismissByPerformingActionAtIndex:(NSUInteger)actionIndex animated:(BOOL)animated completion:(void (^)(void))completion; // this will not perform the action if we have already triggered a dismiss
+    
 + (BOOL)hasVisibleAlertController;
 @property (nonatomic, readonly, getter=isVisible) BOOL visible;
 

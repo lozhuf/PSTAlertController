@@ -420,6 +420,34 @@ static NSUInteger PSTVisibleAlertsCount = 0;
         }
     }
 }
+- (void)dismissByPerformingActionAtIndex:(NSUInteger)actionIndex animated:(BOOL)animated completion:(void (^)(void))completion
+{
+    if (self.executedAlertAction)
+        return;
+    
+    if ([self alertControllerAvailable])
+    {
+        PSTAlertAction* action = self.actions[actionIndex];
+        if (action)
+        {
+            self.executedAlertAction = action;
+            [action performAction];
+        }
+        [self.alertController dismissViewControllerAnimated:animated completion:completion];
+    }
+    else
+    {
+        // Make sure the completion block is called.
+        if (completion) {
+            [self addDidDismissBlock:^(PSTAlertAction *action) { completion(); }];
+        }
+        if (self.preferredStyle == PSTAlertControllerStyleActionSheet) {
+            [self.actionSheet dismissWithClickedButtonIndex:actionIndex animated:animated];
+        } else {
+            [self.alertView dismissWithClickedButtonIndex:actionIndex animated:animated];
+        }
+    }
+}
 
 - (id)presentedObject {
     if ([self alertControllerAvailable]) {
