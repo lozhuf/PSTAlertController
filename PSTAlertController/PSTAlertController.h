@@ -46,6 +46,8 @@ typedef NS_ENUM(NSInteger, PSTAlertActionStyle) {
 @property (nonatomic, copy, readonly) NSString *title;
 @property (nonatomic, readonly) PSTAlertActionStyle style;
 
+@property (nonatomic, getter=isEnabled) BOOL enabled; // This property only works >=ios8
+
 @property (nonatomic, weak) PSTAlertController *alertController; // weak connection
 @end
 

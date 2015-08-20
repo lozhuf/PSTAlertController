@@ -13,6 +13,8 @@
 #import <objc/runtime.h>
 
 #define PROPERTY(property) NSStringFromSelector(@selector(property))
+static void * const PSTAlertActionEnabledKVOContext = (void*)&PSTAlertActionEnabledKVOContext;
+
 
 @interface PSTAlertAction ()
 @property (nonatomic, copy) NSString *title;
@@ -36,6 +38,7 @@
         _title = [title copy];
         _style = style;
         _handler = [handler copy];
+         _enabled = YES;
     }
     return self;
 }
@@ -141,6 +144,11 @@
     // In case the alert controller can't be displayed for any reason,
     // We'd still increment the counter and need to do the cleanup work here.
     [self setIsShowingAlert:NO];
+    
+    for (PSTAlertAction* action in self.actions)
+    {
+        [action removeObserver:self forKeyPath:@"enabled" context:PSTAlertActionEnabledKVOContext];
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -161,6 +169,7 @@
     NSAssert([action isKindOfClass:PSTAlertAction.class], @"Must be of type PSTAlertAction");
 
     action.alertController = self; // weakly connect
+    [action addObserver:self forKeyPath:@"enabled" options:0 context:PSTAlertActionEnabledKVOContext];
 
     self.actions = [[NSArray arrayWithArray:self.actions] arrayByAddingObject:action];
 
@@ -170,6 +179,7 @@
             weakSelf.executedAlertAction = action;
             [action performAction];
         }];
+        alertAction.enabled = action.enabled;
         [self.alertController addAction:alertAction];
     } else {
         if (self.preferredStyle == PSTAlertControllerStyleActionSheet) {
@@ -187,6 +197,20 @@
             if (action.style == PSTAlertActionStyleCancel) {
                 self.alertView.cancelButtonIndex = currentButtonIndex;
             }
+        }
+    }
+}
+
+-(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
+{
+    if (context == PSTAlertActionEnabledKVOContext && object)
+    {
+        if ([self alertControllerAvailable])
+        {
+            // Map PSTAlertAction enabled to UIAlertAction
+            NSUInteger actionIndex = [self.actions indexOfObject:object];
+            if (actionIndex != NSNotFound)
+                ((UIAlertAction*)self.alertController.actions[actionIndex]).enabled = ((PSTAlertAction*)object).isEnabled;
         }
     }
 }
